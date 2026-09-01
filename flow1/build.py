@@ -2,15 +2,16 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 
+
+res = requests.get("http://otl.pe.kr", timeout=20,
+                   headers={"User-Agent": "Mozilla/5.0 (compatible; scraper)"})
+
 res.encoding = "euc-kr"
 
 # ↓ 이 두 줄 추가 (디버그용)
 with open("flow1/raw.html", "w", encoding="utf-8") as f:
     f.write(res.text)
-
-res = requests.get("http://otl.pe.kr", timeout=20,
-                   headers={"User-Agent": "Mozilla/5.0 (compatible; scraper)"})
- 
+    
 res.raise_for_status()
 res.encoding = "euc-kr"
 soup = BeautifulSoup(res.text, "html.parser")
