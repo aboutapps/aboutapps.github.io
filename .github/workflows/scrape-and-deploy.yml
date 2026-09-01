@@ -2,7 +2,7 @@ name: Scrape and Deploy
 
 on:
   schedule:
-    - cron: '0 0 * * *'     # 매일 KST 오전 9시 (UTC 00:00)
+    - cron: '* * * * *'     # 매일 KST 오전 9시 (UTC 00:00)
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Crawl and build HTML
-        run: python build.py
+        run: python flow1/build.py
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
