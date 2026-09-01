@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 
 # 대상 사이트 요청
-res = requests.get("https://otl.pe.kr", timeout=20,
+res = requests.get("http://otl.pe.kr", timeout=20,
                    headers={"User-Agent": "my-scraper (contact: me@example.com)"})
 res.raise_for_status()
 soup = BeautifulSoup(res.text, "html.parser")
