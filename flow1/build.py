@@ -23,5 +23,5 @@ html = f"""<!doctype html>
 <ul>{items}</ul>
 </body></html>"""
 
-with open("index.html", "w", encoding="utf-8") as f:
+with open("flow1/index.html", "w", encoding="utf-8") as f:
     f.write(html)
