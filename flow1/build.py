@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timezone
 
 
-res = requests.get("http://otl.pe.kr", timeout=20,
+res = requests.get("http://otl.pe.kr/welcome.php", timeout=20,
                    headers={"User-Agent": "Mozilla/5.0 (compatible; scraper)"})
 
 res.encoding = "euc-kr"
