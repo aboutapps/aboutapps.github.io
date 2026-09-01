@@ -9,7 +9,7 @@ res.raise_for_status()
 soup = BeautifulSoup(res.text, "html.parser")
 
 # 원하는 내용 추출 (예: 제목들)
-titles = [h.get_text(strip=True) for h in soup.select("h2")]
+titles = [h.get_text(strip=True) for h in soup.select("title")]
 
 # HTML 생성
 now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
