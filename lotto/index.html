@@ -1,1 +1,490 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>로또6/45</title>
+<script>try{var t=localStorage.getItem('lotto645.theme');document.documentElement.dataset.theme=['dark','light','navy','paper','forest'].includes(t)?t:'dark'}catch(e){document.documentElement.dataset.theme='dark'}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+<style>
+  /* 테마 5종 (기본: 다크) */
+  :root,:root[data-theme="dark"]{
+    --bg:#141414; --text:#f1f1f1; --muted:#a3a3a3; --line:#2e2e2e;
+    --pink:#e9706d; --pink-line:#d98582; --teal:#1aa587; --teal-soft:#1f2a28;
+    --surface:#1c1c1c; --overlay:rgba(0,0,0,.65);
+    color-scheme: dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --text:#1f1f1f; --muted:#6b6b6b; --line:#e6e6e6;
+    --pink:#f47f7c; --pink-line:#e8908d; --teal:#14967a; --teal-soft:#e6f0ee;
+    --surface:#ffffff; --overlay:rgba(0,0,0,.45);
+    color-scheme: light;
+  }
+  :root[data-theme="navy"]{
+    --bg:#0f1a2b; --text:#e8eef7; --muted:#93a3ba; --line:#263650;
+    --pink:#ef7a77; --pink-line:#c97f80; --teal:#2bb59a; --teal-soft:#1a3040;
+    --surface:#16243a; --overlay:rgba(3,8,18,.7);
+    color-scheme: dark;
+  }
+  :root[data-theme="paper"]{
+    --bg:#f5ecdc; --text:#3a2e22; --muted:#7a6a58; --line:#e0d1b8;
+    --pink:#de6e6a; --pink-line:#d48c84; --teal:#2f8a6f; --teal-soft:#e5e8d6;
+    --surface:#fbf5ea; --overlay:rgba(40,28,16,.45);
+    color-scheme: light;
+  }
+  :root[data-theme="forest"]{
+    --bg:#111d18; --text:#e6efe9; --muted:#97aba0; --line:#26382f;
+    --pink:#e57b6e; --pink-line:#c98a7f; --teal:#3cb88c; --teal-soft:#1b3027;
+    --surface:#172720; --overlay:rgba(0,10,5,.7);
+    color-scheme: dark;
+  }
+  html,body{height:100%}
+  :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  *,*::before,*::after{box-sizing:inherit}
+  body{background:var(--bg);color:var(--text);font-family:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;margin:0}
+
+  /* 대괄호 모양 번호칸 */
+  .num{position:relative;aspect-ratio:1/1.05;width:100%;display:flex;align-items:center;justify-content:center;
+       color:var(--c);font-size:clamp(18px,5.4vw,26px);border-top:2px solid var(--c);border-bottom:2px solid var(--c);
+       background:transparent;cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent}
+  .num::before,.num::after{content:"";position:absolute;top:-2px;bottom:-2px;width:2px;
+       background:linear-gradient(var(--c) 0 22%,transparent 22% 78%,var(--c) 78% 100%)}
+  .num::before{left:0}.num::after{right:0}
+  .num.on{background:var(--c);color:#fff;font-weight:700;text-shadow:0 1px 1px rgba(0,0,0,.25)}
+  /* 번호대 색상 (1-10 노랑, 11-20 파랑, 21-30 빨강, 31-40 회색, 41-45 초록) */
+  .r1{--c:#e8b100}.r2{--c:#3fb0e6}.r3{--c:#ff6464}.r4{--c:#9a9a9a}.r5{--c:#94c51f}
+  .num:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+  .num:disabled{cursor:not-allowed}
+  #runSec:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+  /* 제외수 */
+  .num.ex{--c:var(--muted);color:var(--muted);opacity:.45;
+          background:linear-gradient(to top right,transparent calc(50% - 1px),var(--muted) calc(50% - 1px) calc(50% + 1px),transparent calc(50% + 1px))}
+  #grid.ex-mode .num:not(.ex){opacity:.9}
+  .top6 .ball{cursor:pointer}
+  .top6 .ball.on{outline:2px solid var(--text);outline-offset:2px}
+  #exBtn.active{border-color:var(--text);background:var(--text);color:var(--bg)}
+
+  .btn-line{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:6px}
+  #autoBtn.running{border-color:var(--pink);background:var(--pink);color:#fff}
+  .btn-soft{background:var(--teal-soft);color:var(--text);border-radius:6px}
+  .btn-main{background:var(--teal);color:#fff;border-radius:6px}
+  button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+
+  .ball{width:32px;height:32px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:14px;text-shadow:0 1px 1px rgba(0,0,0,.25)}
+  .b1{background:#fbc400}.b2{background:#69c8f2}.b3{background:#ff7272}.b4{background:#aaaaaa}.b5{background:#b0d840}
+  .ball.sm{width:26px;height:26px;font-size:12px}
+
+  .sheet{background:var(--surface);border-top-left-radius:14px;border-top-right-radius:14px}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="mx-auto max-w-[540px] px-5 pb-[16px]">
+  <!-- 헤더 -->
+  <header class="flex items-center justify-between py-[10px] border-b" style="border-color:var(--line)">
+    <h1 class="text-[18px] font-medium">로또6/45 번호선택</h1>
+    <label class="relative block">
+      <span class="sr-only">색상 테마</span>
+      <select id="themeSel" class="btn-line h-[30px] text-[13px] pl-[8px] pr-[20px] appearance-none cursor-pointer" style="background:var(--surface)">
+        <option value="dark">다크</option>
+        <option value="light">라이트</option>
+        <option value="navy">네이비</option>
+        <option value="paper">종이</option>
+        <option value="forest">숲</option>
+      </select>
+      <span class="pointer-events-none absolute right-[7px] top-1/2 -translate-y-1/2 text-[10px]" style="color:var(--muted)">▼</span>
+    </label>
+  </header>
+
+  <!-- 상단 버튼 -->
+  <div class="grid grid-cols-4 gap-[6px] mt-[14px]">
+    <button id="resetBtn" class="btn-line h-[34px] text-[13px]">초기화</button>
+    <button id="autoBtn" class="btn-line h-[34px] text-[13px]">자동 채우기</button>
+    <button id="exBtn" class="btn-line h-[34px] text-[13px]">제외수 등록</button>
+    <label class="relative block">
+      <span class="sr-only">빠르기</span>
+      <select id="speedSel" class="btn-line w-full h-[34px] text-[13px] pl-[8px] pr-[20px] appearance-none cursor-pointer" style="background:var(--surface)">
+        <option value="1">1단계 1.0초</option>
+        <option value="2">2단계 0.8초</option>
+        <option value="3">3단계 0.6초</option>
+        <option value="4">4단계 0.4초</option>
+        <option value="5">5단계 0.2초</option>
+        <option value="6">6단계 0.1초</option>
+      </select>
+      <span class="pointer-events-none absolute right-[7px] top-1/2 -translate-y-1/2 text-[10px]" style="color:var(--muted)">▼</span>
+    </label>
+  </div>
+
+  <!-- 실행시간 -->
+  <div class="flex items-center gap-[8px] mt-[8px] text-[13px]">
+    <label for="runSec" style="color:var(--muted)">실행시간</label>
+    <input id="runSec" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off"
+           class="btn-line w-[84px] h-[30px] px-[8px] text-right" style="background:var(--surface)" />
+    <span>초</span>
+    <span class="text-[12px]" style="color:var(--muted)">(0 = 무한)</span>
+    <span id="runLeft" class="ml-auto text-[12px] tabular-nums" style="color:var(--muted)"></span>
+  </div>
+
+  <!-- 최다 출현 TOP 6 -->
+  <section class="mt-[12px] border rounded-[6px] px-[12px] py-[8px]" style="border-color:var(--line)">
+    <div class="flex items-center justify-between">
+      <h2 class="text-[13px] font-medium">최다 출현 <span id="topMeta" class="font-normal" style="color:var(--muted)"></span></h2>
+      <button id="topPickBtn" class="btn-line h-[26px] px-[8px] text-[12px]">선택</button>
+    </div>
+    <ol id="top6" class="top6 grid grid-cols-6 gap-[4px] mt-[6px]"></ol>
+  </section>
+
+  <!-- 번호판 -->
+  <section class="mt-[12px] border" style="border-color:var(--pink-line)">
+    <div class="grid grid-cols-2 h-12 border-b" style="border-color:var(--pink-line)">
+      <div id="gameLabel" class="flex items-center px-4 text-base" style="color:var(--muted)">A게임 · 0/6</div>
+      <div class="flex items-center justify-end px-4 text-xl text-white" style="background:var(--pink)">1,000원</div>
+    </div>
+    <div id="grid" class="grid grid-cols-7 gap-x-[4.5%] gap-y-4 px-[6%] py-6" role="group" aria-label="번호 1부터 45"></div>
+  </section>
+
+  <!-- 내가 선택한 번호 -->
+  <section class="mt-[16px]">
+    <div class="flex items-end justify-between border-b pb-[6px]" style="border-color:var(--text)">
+      <h2 class="text-[16px]" style="color:var(--muted)">내가 선택한 번호</h2>
+      <button id="favBtn" class="btn-line h-[28px] px-[10px] text-[12px]">나만의번호 등록</button>
+    </div>
+    <div id="picked" class="flex flex-wrap gap-[6px] py-[8px] min-h-[48px] items-center"></div>
+  </section>
+
+  <!-- 담은 게임 -->
+  <section id="gamesWrap" class="mt-[4px] hidden">
+    <h2 class="text-[14px] mb-[6px]" style="color:var(--muted)">구매 목록 <span id="gameCount"></span></h2>
+    <ul id="games" class="space-y-[6px]"></ul>
+  </section>
+
+  <!-- 나만의 번호 -->
+  <section id="favWrap" class="mt-[12px] hidden">
+    <h2 class="text-[14px] mb-[6px]" style="color:var(--muted)">나만의 번호</h2>
+    <ul id="favs" class="space-y-[6px]"></ul>
+  </section>
+
+  <!-- 하단 버튼 -->
+  <div class="grid grid-cols-2 gap-[8px] mt-[16px]">
+    <button id="doneBtn" class="btn-soft h-[38px] text-[15px]">선택완료</button>
+    <button id="okBtn" class="btn-main h-[38px] text-[15px]">확인</button>
+  </div>
+</main>
+
+<!-- 토스트 -->
+<div id="toast" role="status" aria-live="polite"
+     class="fixed left-1/2 -translate-x-1/2 bottom-24 px-4 py-2 rounded-md text-sm text-white bg-black/80 opacity-0 pointer-events-none transition-opacity"></div>
+
+<!-- 확인 시트 -->
+<div id="modal" class="fixed inset-0 hidden items-end justify-center z-50" style="background:var(--overlay)">
+  <div class="sheet w-full max-w-[540px] p-[18px]" style="padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))">
+    <h3 class="text-[17px] font-bold mb-[12px]">구매 확인</h3>
+    <ul id="summary" class="space-y-[6px] mb-[12px]"></ul>
+    <div class="flex justify-between border-t pt-[12px] mb-[14px]" style="border-color:var(--line)">
+      <span>총 금액</span><strong id="total">0원</strong>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="modalClose" class="btn-line h-[36px] text-[14px]">닫기</button>
+      <button id="modalClear" class="btn-main h-[36px] text-[14px]">목록 비우기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const MAX = 6, MAX_GAMES = 5, PRICE = 1000;
+  const LETTERS = ['A','B','C','D','E'];
+  const KEY = 'lotto645.v1';
+
+  // ---------- 저장소 ----------
+  const load = () => {
+    try { const v = JSON.parse(localStorage.getItem(KEY)); if (v) return v; } catch (e) {}
+    return { current: [], games: [], favs: [] };
+  };
+  let state = load();
+  state.current ||= []; state.games ||= []; state.favs ||= []; state.excluded ||= [];
+  if (![1,2,3,4,5,6].includes(state.speed)) state.speed = 4;
+  if (!Number.isInteger(state.runSec) || state.runSec < 0) state.runSec = 0;   // 0 = 무한
+  const MAX_EX = 45 - MAX;   // 최소 6개는 남아야 함
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  // ---------- 유틸 ----------
+  const $ = id => document.getElementById(id);
+  const ballClass = n => n<=10?'b1':n<=20?'b2':n<=30?'b3':n<=40?'b4':'b5';
+  const ball = (n, sm) => `<span class="ball ${sm?'sm':''} ${ballClass(n)}">${n}</span>`;
+  const sorted = a => [...a].sort((x,y)=>x-y);
+  const randInt = max => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % max; };
+  let toastT;
+  const toast = msg => { const t=$('toast'); t.textContent=msg; t.style.opacity=1; clearTimeout(toastT); toastT=setTimeout(()=>t.style.opacity=0,1600); };
+
+  // ---------- 이 페이지 실행 후 출현 횟수 (새로고침하면 0부터) ----------
+  const FREQ = Array(46).fill(0);
+  let rounds = 0;   // 자동 선택이 6개를 뽑은 횟수
+  const getTop6 = () => FREQ.map((c,n)=>[n,c]).slice(1).filter(x=>x[1]>0)
+                        .sort((a,b)=>b[1]-a[1]||a[0]-b[0]).slice(0,6);
+
+  // ---------- 번호판 ----------
+  const grid = $('grid');
+  for (let n = 1; n <= 45; n++) {
+    const b = document.createElement('button');
+    b.className = 'num ' + ballClass(n).replace('b','r'); b.textContent = n; b.dataset.n = n;
+    b.setAttribute('aria-pressed','false'); b.setAttribute('aria-label', n + '번');
+    b.addEventListener('click', () => toggle(n));
+    grid.appendChild(b);
+  }
+
+  let exMode = false;
+  function toggle(n){
+    if (exMode) return toggleEx(n);
+    if (state.excluded.includes(n)) return toast(`${n}번은 제외수예요. 제외수 등록에서 해제하세요.`);
+    if (timer) stopAuto();
+    const i = state.current.indexOf(n);
+    if (i >= 0) state.current.splice(i,1);
+    else if (state.current.length >= MAX) return toast('번호는 6개까지 선택할 수 있어요.');
+    else state.current.push(n);
+    save(); render();
+  }
+
+  // ---------- 렌더 ----------
+  function render(){
+    const cur = state.current;
+    grid.querySelectorAll('.num').forEach(b => {
+      const n = +b.dataset.n, ex = state.excluded.includes(n);
+      const on = exMode ? false : cur.includes(n);
+      b.classList.toggle('on', on); b.classList.toggle('ex', ex);
+      b.setAttribute('aria-pressed', exMode ? ex : on);
+      b.setAttribute('aria-label', n + '번' + (ex ? ' (제외)' : ''));
+    });
+    grid.classList.toggle('ex-mode', exMode);
+    const TOP6 = getTop6();
+    $('topMeta').textContent = `· ${rounds.toLocaleString('ko-KR')}회 추첨`;
+    $('topPickBtn').disabled = TOP6.length < MAX;
+    $('topPickBtn').style.opacity = TOP6.length < MAX ? .4 : 1;
+    $('top6').innerHTML = !TOP6.length
+      ? `<li class="col-span-6 text-[12px] py-[6px]" style="color:var(--muted)">자동 채우기가 돌면 나온 번호를 집계해요.</li>`
+      : TOP6.map(([n,c],i)=>`
+      <li class="flex flex-col items-center gap-[2px]">
+        <span class="ball sm ${ballClass(n)} ${!exMode && cur.includes(n)?'on':''}" data-top="${n}" role="button" tabindex="0"
+              aria-label="${i+1}위 ${n}번 ${c}회">${n}</span>
+        <span class="text-[11px]" style="color:var(--muted)">${c}회</span>
+      </li>`).join('');
+    const letter = LETTERS[Math.min(state.games.length, MAX_GAMES-1)];
+    $('gameLabel').textContent = exMode
+      ? `제외할 번호 선택 · ${state.excluded.length}개`
+      : `${letter}게임 · ${cur.length}/6`;
+    const exs = sorted(state.excluded);
+    $('exBtn').textContent = exMode ? '제외 완료' : (exs.length ? `제외수 (${exs.length})` : '제외수 등록');
+    $('exBtn').classList.toggle('active', exMode);
+    $('resetBtn').textContent = exMode ? '제외 전체 해제' : '초기화';
+    $('picked').innerHTML = cur.length
+      ? sorted(cur).map(n=>ball(n)).join('')
+      : `<span class="text-[14px]" style="color:var(--muted)">번호를 눌러 6개를 선택하세요.</span>`;
+
+    $('gamesWrap').classList.toggle('hidden', !state.games.length);
+    $('gameCount').textContent = `(${state.games.length}/${MAX_GAMES})`;
+    $('games').innerHTML = state.games.map((g,i)=>`
+      <li class="flex items-center gap-2 border rounded-md px-[10px] py-[6px]" style="border-color:var(--line)">
+        <strong class="w-5">${LETTERS[i]}</strong>
+        <span class="flex gap-1 flex-wrap flex-1">${g.nums.map(n=>ball(n,true)).join('')}</span>
+        <span class="text-xs" style="color:var(--muted)">${g.auto?'자동':'수동'}</span>
+        <button data-del-game="${i}" class="text-sm px-2" style="color:var(--muted)" aria-label="${LETTERS[i]}게임 삭제">삭제</button>
+      </li>`).join('');
+
+    $('favWrap').classList.toggle('hidden', !state.favs.length);
+    $('favs').innerHTML = state.favs.map((f,i)=>`
+      <li class="flex items-center gap-2 border rounded-md px-[10px] py-[6px]" style="border-color:var(--line)">
+        <span class="flex gap-1 flex-wrap flex-1">${f.map(n=>ball(n,true)).join('')}</span>
+        <button data-use-fav="${i}" class="text-sm px-2" style="color:var(--teal)">불러오기</button>
+        <button data-del-fav="${i}" class="text-sm px-2" style="color:var(--muted)">삭제</button>
+      </li>`).join('');
+  }
+
+  // ---------- 버튼 ----------
+  $('resetBtn').onclick = () => {
+    if (exMode) { state.excluded = []; save(); render(); return toast('제외수를 모두 해제했어요.'); }
+    haltAuto(); state.current = []; autoFilled = false;
+    FREQ.fill(0); rounds = 0;   // 최다 출현 집계도 초기화
+    save(); render();
+  };
+
+  // ---------- 자동 선택 애니메이션 (0.3초 간격) ----------
+  // 빠르기 5단계: 1초 이내를 5개로 나눔 (1단계 느림 ~ 5단계 빠름)
+  const SPEEDS = { 1:1000, 2:800, 3:600, 4:400, 5:200, 6:100 };
+  const interval = () => SPEEDS[state.speed];
+  let autoFilled = false;
+  let timer = null;
+  const autoBtn = $('autoBtn');
+  const pickOne = () => {
+    const pool = [];
+    for (let n = 1; n <= 45; n++) if (!state.current.includes(n) && !state.excluded.includes(n)) pool.push(n);
+    if (pool.length) { const n = pool[randInt(pool.length)]; state.current.push(n); FREQ[n]++; }
+  };
+
+  // ---------- 제외수 ----------
+  let resumeAuto = false;
+  function toggleEx(n){
+    const i = state.excluded.indexOf(n);
+    if (i >= 0) state.excluded.splice(i,1);
+    else if (state.excluded.length >= MAX_EX) return toast(`제외수는 최대 ${MAX_EX}개까지 등록할 수 있어요.`);
+    else {
+      state.excluded.push(n);
+      state.current = state.current.filter(x => x !== n);   // 이미 선택된 번호면 선택 해제
+    }
+    save(); render();
+  }
+  $('exBtn').onclick = () => {
+    if (!exMode) {
+      resumeAuto = !!timer; haltAuto();
+      exMode = true; render();
+      toast('제외할 번호를 누르세요. 다시 누르면 해제돼요.');
+    } else {
+      exMode = false; render();
+      if (resumeAuto) startAuto();
+      if (state.excluded.length) toast(`제외수 ${state.excluded.length}개를 저장했어요.`);
+    }
+  };
+  const setAutoLabel = () => {
+    autoBtn.textContent = timer ? '정지' : '자동 채우기';
+    autoBtn.classList.toggle('running', !!timer);
+  };
+  const pickSix = () => { state.current = []; while (state.current.length < MAX) pickOne(); rounds++; render(); };
+  const speedSel = $('speedSel');
+  speedSel.value = String(state.speed);
+  speedSel.onchange = () => {
+    state.speed = +speedSel.value; save();
+    if (timer) { clearInterval(timer); timer = setInterval(pickSix, interval()); }   // 도는 중이면 바로 적용
+    toast(`빠르기 ${state.speed}단계 (${(interval()/1000).toFixed(1)}초)`);
+  };
+  // ---------- 실행시간 (0 = 무한, 그 외 N초 뒤 자동 정지) ----------
+  let endAt = 0, runTick = null;
+  const runInput = $('runSec');
+  runInput.value = state.runSec;
+  const showLeft = () => {
+    const el = $('runLeft');
+    if (!timer) { el.textContent = ''; return; }
+    if (!endAt) { el.textContent = '무한 실행 중'; return; }
+    el.textContent = `남은 시간 ${Math.max(0, Math.ceil((endAt - Date.now())/1000))}초`;
+  };
+  const armRun = () => {
+    clearInterval(runTick); runTick = null;
+    endAt = state.runSec > 0 ? Date.now() + state.runSec*1000 : 0;
+    if (endAt) runTick = setInterval(() => {
+      if (Date.now() >= endAt) { stopAuto(); toast(`${state.runSec}초 실행을 마쳤어요.`); }
+      else showLeft();
+    }, 100);
+    showLeft();
+  };
+  runInput.onchange = () => {
+    let v = parseInt(runInput.value, 10);
+    if (!Number.isFinite(v) || v < 0) v = 0;
+    if (v > 86400) v = 86400;
+    runInput.value = v; state.runSec = v; save();
+    if (timer) armRun();   // 도는 중이면 지금부터 다시 계산
+    toast(v ? `실행시간 ${v}초` : '실행시간 무한');
+  };
+  runInput.oninput = () => {   // 숫자 외 문자는 입력되지 않게
+    const d = runInput.value.replace(/[^0-9]/g, '');
+    if (d !== runInput.value) runInput.value = d;
+  };
+  runInput.onkeydown = e => { if (e.key === 'Enter') runInput.blur(); };
+
+  function startAuto(){
+    haltAuto();
+    autoFilled = true; pickSix();
+    timer = setInterval(pickSix, interval());   // 선택한 빠르기마다 6개를 한꺼번에 새로 선택
+    setAutoLabel(); armRun();
+  }
+  function haltAuto(){
+    clearInterval(runTick); runTick = null; endAt = 0;
+    if (timer) { clearInterval(timer); timer = null; setAutoLabel(); }
+    showLeft();
+  }
+  function stopAuto(){
+    haltAuto();
+    while (state.current.length < MAX) pickOne();   // 덜 찼으면 나머지 바로 채움
+    autoFilled = true; save(); render();
+  }
+  const leaveEx = () => { if (exMode) { exMode = false; resumeAuto = false; render(); } };
+  autoBtn.onclick = () => { leaveEx(); timer ? stopAuto() : startAuto(); };
+
+  $('topPickBtn').onclick = () => {
+    leaveEx(); haltAuto();
+    const TOP6 = getTop6();
+    if (TOP6.length < MAX) return toast('아직 집계된 번호가 6개보다 적어요.');
+    const nums = TOP6.map(([n])=>n);
+    const hit = nums.filter(n => state.excluded.includes(n));
+    state.current = nums; autoFilled = false; save(); render();
+    toast(hit.length ? `제외수 ${hit.join(', ')}번이 포함돼 있어요.` : '최다 출현 번호를 선택했어요.');
+  };
+  document.addEventListener('keydown', e => {
+    const tb = e.target.closest && e.target.closest('[data-top]');
+    if (tb && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(+tb.dataset.top); }
+  });
+
+  $('favBtn').onclick = () => {
+    leaveEx();
+    if (timer) stopAuto();
+    if (state.current.length !== MAX) return toast('6개를 선택한 뒤 등록하세요.');
+    const s = sorted(state.current), key = s.join(',');
+    if (state.favs.some(f => f.join(',') === key)) return toast('이미 등록된 번호예요.');
+    state.favs.unshift(s); save(); render(); toast('나만의번호로 등록했어요.');
+  };
+
+  $('doneBtn').onclick = () => {
+    leaveEx();
+    if (timer) stopAuto();
+    if (state.current.length !== MAX) return toast(`${MAX - state.current.length}개를 더 선택하세요.`);
+    if (state.games.length >= MAX_GAMES) return toast('한 번에 5게임까지 담을 수 있어요.');
+    state.games.push({ nums: sorted(state.current), auto: autoFilled });
+    state.current = []; autoFilled = false; save(); render();
+    toast(`${LETTERS[state.games.length-1]}게임을 담았어요.`);
+  };
+
+  const openModal = () => {
+    if (!state.games.length) return toast('선택완료로 게임을 먼저 담아주세요.');
+    $('summary').innerHTML = state.games.map((g,i)=>`
+      <li class="flex items-center gap-2"><strong class="w-5">${LETTERS[i]}</strong>
+      <span class="flex gap-1 flex-wrap">${g.nums.map(n=>ball(n,true)).join('')}</span></li>`).join('');
+    $('total').textContent = (state.games.length * PRICE).toLocaleString('ko-KR') + '원';
+    const m = $('modal'); m.classList.remove('hidden'); m.classList.add('flex');
+  };
+  const closeModal = () => { const m=$('modal'); m.classList.add('hidden'); m.classList.remove('flex'); };
+  $('okBtn').onclick = openModal;
+  $('modalClose').onclick = closeModal;
+  $('modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+  $('modalClear').onclick = () => { state.games = []; save(); render(); closeModal(); toast('구매 목록을 비웠어요.'); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  document.addEventListener('click', e => {
+    const tb = e.target.closest('[data-top]');
+    if (tb) return toggle(+tb.dataset.top);
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.dataset.delGame != null) { state.games.splice(+t.dataset.delGame,1); save(); render(); }
+    if (t.dataset.delFav != null) { state.favs.splice(+t.dataset.delFav,1); save(); render(); }
+    if (t.dataset.useFav != null) {
+      leaveEx(); haltAuto(); state.current = [...state.favs[+t.dataset.useFav]]; autoFilled=false; save(); render();
+      const hit = state.current.filter(n => state.excluded.includes(n));
+      if (hit.length) toast(`제외수 ${hit.join(', ')}번이 포함된 번호예요.`);
+    }
+  });
+
+  // ---------- 테마 ----------
+  const themeSel = $('themeSel');
+  const setTheme = t => {
+    document.documentElement.dataset.theme = t; themeSel.value = t;
+    try { localStorage.setItem('lotto645.theme', t); } catch (e) {}
+  };
+  themeSel.onchange = () => setTheme(themeSel.value);
+  setTheme(document.documentElement.dataset.theme || 'dark');
+
+  render();
+  startAuto();
+})();
+</script>
+</body>
+</html>
 
