@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>금주의 로또 결과</title>
+<meta name="description" content="로또6/45 이번 주 당첨번호, 순위별 당첨금, 번호 분석과 출현 통계" />
+<script>try{var t=localStorage.getItem('lotto645.theme');document.documentElement.dataset.theme=['dark','light','navy','paper','forest'].includes(t)?t:'dark'}catch(e){document.documentElement.dataset.theme='dark'}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* 테마 5종 — /lotto 와 동일 (localStorage 'lotto645.theme' 공유) */
+  :root,:root[data-theme="dark"]{
+    --bg:#141414; --text:#f1f1f1; --muted:#a3a3a3; --line:#2e2e2e;
+    --pink:#e9706d; --teal:#1aa587; --teal-soft:#1f2a28; --surface:#1c1c1c; --gold:#f2c14e;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#ffffff; --text:#1f1f1f; --muted:#6b6b6b; --line:#e6e6e6;
+    --pink:#e0605d; --teal:#14967a; --teal-soft:#e6f0ee; --surface:#f8f8f8; --gold:#b8860b;
+    color-scheme: light;
+  }
+  :root[data-theme="navy"]{
+    --bg:#0f1a2b; --text:#e8eef7; --muted:#93a3ba; --line:#263650;
+    --pink:#ef7a77; --teal:#2bb59a; --teal-soft:#1a3040; --surface:#16243a; --gold:#f2c14e;
+    color-scheme: dark;
+  }
+  :root[data-theme="paper"]{
+    --bg:#f5ecdc; --text:#3a2e22; --muted:#7a6a58; --line:#e0d1b8;
+    --pink:#c95a56; --teal:#2f8a6f; --teal-soft:#e5e8d6; --surface:#fbf5ea; --gold:#9a6b00;
+    color-scheme: light;
+  }
+  :root[data-theme="forest"]{
+    --bg:#111d18; --text:#e6efe9; --muted:#97aba0; --line:#26382f;
+    --pink:#e57b6e; --teal:#3cb88c; --teal-soft:#1b3027; --surface:#172720; --gold:#f2c14e;
+    color-scheme: dark;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font-family:"Noto Sans KR",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+       padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+  main{max-width:540px;margin:0 auto;padding:0 16px 24px}
+  h1,h2,h3,p{margin:0}
+  .muted{color:var(--muted)}
+  .num-t{font-variant-numeric:tabular-nums}
+
+  /* 헤더 */
+  header{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+  header h1{font-size:18px;font-weight:500}
+  .sel{position:relative}
+  .sel select{appearance:none;height:30px;padding:0 22px 0 8px;font:inherit;font-size:13px;color:var(--text);
+              background:var(--surface);border:1px solid var(--line);border-radius:6px;cursor:pointer}
+  .sel::after{content:"▼";position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--muted);pointer-events:none}
+
+  section{margin-top:14px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+  .sec-h h2{font-size:14px;font-weight:500}
+  .sec-h small{font-size:12px;color:var(--muted)}
+
+  /* 회차 네비 + 당첨번호 */
+  .round-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .icon-btn{width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--text);
+            border-radius:8px;font-size:14px;cursor:pointer}
+  .icon-btn:disabled{opacity:.3;cursor:default}
+  .round-title{text-align:center}
+  .round-title .r{font-size:22px;font-weight:700}
+  .round-title .r b{color:var(--pink)}
+  .round-title .d{font-size:12px;color:var(--muted);margin-top:2px}
+  .badge{display:inline-block;font-size:11px;padding:1px 6px;border-radius:999px;background:var(--teal);color:#fff;vertical-align:3px;margin-left:4px}
+
+  .balls{display:flex;align-items:center;justify-content:center;gap:6px;margin:16px 0 4px;flex-wrap:nowrap}
+  .ball{width:clamp(36px,10.5vw,46px);aspect-ratio:1;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:clamp(15px,4.4vw,19px);text-shadow:0 1px 1px rgba(0,0,0,.3);
+        box-shadow:inset -3px -4px 6px rgba(0,0,0,.18), inset 3px 3px 6px rgba(255,255,255,.25)}
+  .ball.sm{width:26px;font-size:12px;box-shadow:none}
+  .ball.xs{width:22px;font-size:11px;box-shadow:none}
+  .b1{background:#fbc400}.b2{background:#69c8f2}.b3{background:#ff7272}.b4{background:#aaaaaa}.b5{background:#b0d840}
+  .plus{color:var(--muted);font-size:18px;margin:0 1px}
+  .bonus-lbl{display:flex;justify-content:flex-end;font-size:11px;color:var(--muted);padding-right:4px}
+  .pop{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+  @keyframes pop{from{transform:scale(.2) rotate(-90deg);opacity:0}to{transform:none;opacity:1}}
+
+  /* 1등 요약 */
+  .first{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .first .k{font-size:12px;color:var(--muted)}
+  .first .v{font-size:20px;font-weight:700;margin-top:2px}
+  .first .v.gold{color:var(--gold)}
+  .first .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .first > div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+
+  /* 표 */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font-weight:500;color:var(--muted);font-size:12px;text-align:right;padding:6px 4px;border-bottom:1px solid var(--line)}
+  td{text-align:right;padding:9px 4px;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  tr:last-child td{border-bottom:0}
+  td .cond{display:block;font-size:11px;color:var(--muted)}
+  .rk1 td:first-child{color:var(--gold);font-weight:700}
+  .sales{display:flex;justify-content:space-between;font-size:13px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+
+  /* 번호 분석 */
+  .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .chip{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center}
+  .chip .k{font-size:11px;color:var(--muted)}
+  .chip .v{font-size:15px;font-weight:700;margin-top:2px}
+  .zones{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+  .zone{text-align:center;font-size:11px;color:var(--muted)}
+  .zone .bar{height:44px;background:var(--bg);border:1px solid var(--line);border-radius:6px;position:relative;overflow:hidden;margin-bottom:4px}
+  .zone .bar i{position:absolute;left:0;right:0;bottom:0;border-radius:0 0 5px 5px}
+  .zone .bar span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text)}
+
+  /* 최근 회차 */
+  .hist li{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}
+  .hist li:last-child{border-bottom:0}
+  .hist li:hover .hr{color:var(--teal)}
+  .hist li.cur .hr{color:var(--pink)}
+  .hist .hr{width:58px;font-size:13px;font-weight:500}
+  .hist .hb{display:flex;gap:3px;flex:1;align-items:center}
+  .hist .hd{font-size:11px;color:var(--muted)}
+  ul,ol{list-style:none;margin:0;padding:0}
+
+  /* 통계 */
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tab{flex:1;height:30px;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:6px;font:inherit;font-size:12px;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+  .rank6{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center}
+  .rank6 li{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted)}
+  .heat{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-top:12px}
+  .heat div{aspect-ratio:1;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+            font-size:12px;font-weight:700;border:1px solid var(--line)}
+  .heat div small{font-size:9px;font-weight:400;opacity:.8}
+  .heat div.hit{outline:2px solid var(--pink);outline-offset:-2px}
+  .legend{display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:11px;color:var(--muted);margin-top:6px}
+  .legend i{display:inline-block;width:60px;height:8px;border-radius:4px;background:linear-gradient(90deg,color-mix(in srgb,var(--teal) 8%,var(--bg)),var(--teal))}
+
+  /* 다음 추첨 */
+  .next{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .next .t{font-size:12px;color:var(--muted)}
+  .next .cd{font-size:20px;font-weight:700;margin-top:2px}
+  .cta{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 14px;border-radius:8px;
+       background:var(--teal);color:#fff;text-decoration:none;font-size:14px;font-weight:500;white-space:nowrap}
+
+  footer{margin-top:18px;font-size:11px;color:var(--muted);line-height:1.7;text-align:center}
+  footer a{color:inherit}
+  button:focus-visible,a:focus-visible,select:focus-visible,li:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+  .empty{padding:40px 0;text-align:center;color:var(--muted);font-size:14px}
+  @media (prefers-reduced-motion: reduce){.pop{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>금주의 로또 결과</h1>
+    <label class="sel">
+      <span style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">색상 테마</span>
+      <select id="themeSel">
+        <option value="dark">다크</option><option value="light">라이트</option><option value="navy">네이비</option>
+        <option value="paper">종이</option><option value="forest">숲</option>
+      </select>
+    </label>
+  </header>
+
+  <div id="app"><p class="empty">당첨 결과 데이터를 불러오는 중…</p></div>
+
+  <footer>
+    <p>업데이트 <span id="updated" class="num-t">-</span> · 매주 월요일 자동 갱신</p>
+    <p>출처 <a href="https://www.dhlottery.co.kr/lt645/result" target="_blank" rel="noopener">동행복권</a> · 참고용이며 정확한 결과는 공식 사이트에서 확인하세요.</p>
+  </footer>
+</main>
+
+<template id="tpl">
+  <!-- ① 당첨번호 -->
+  <section class="card" aria-labelledby="roundTitle">
+    <div class="round-nav">
+      <button class="icon-btn" id="prevBtn" aria-label="이전 회차">◀</button>
+      <div class="round-title">
+        <h2 class="r" id="roundTitle"></h2>
+        <p class="d" id="roundDate"></p>
+      </div>
+      <button class="icon-btn" id="nextBtn" aria-label="다음 회차">▶</button>
+    </div>
+    <div class="balls" id="balls" aria-live="polite"></div>
+    <div class="bonus-lbl">보너스</div>
+
+    <div class="first">
+      <div>
+        <p class="k">1등 1인당 당첨금</p>
+        <p class="v gold num-t" id="firstAmt"></p>
+        <p class="s num-t" id="firstAmtFull"></p>
+      </div>
+      <div>
+        <p class="k">1등 당첨자</p>
+        <p class="v num-t" id="firstCnt"></p>
+        <p class="s" id="firstType"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ② 순위별 당첨 정보 -->
+  <section class="card">
+    <div class="sec-h"><h2>순위별 당첨 정보</h2><small>1인당 금액 기준</small></div>
+    <table>
+      <thead><tr><th>순위</th><th>당첨자</th><th>1인당</th><th>총 당첨금</th></tr></thead>
+      <tbody id="rankBody"></tbody>
+    </table>
+    <div class="sales"><span class="muted">총 판매금액</span><b class="num-t" id="sales"></b></div>
+  </section>
+
+  <!-- ③ 이번 회차 번호 분석 -->
+  <section class="card">
+    <div class="sec-h"><h2>번호 분석</h2><small>보너스 제외</small></div>
+    <div class="chips">
+      <div class="chip"><p class="k">합계</p><p class="v num-t" id="aSum"></p></div>
+      <div class="chip"><p class="k">홀 : 짝</p><p class="v num-t" id="aOdd"></p></div>
+      <div class="chip"><p class="k">저 : 고</p><p class="v num-t" id="aLow"></p></div>
+      <div class="chip"><p class="k">연속번호</p><p class="v num-t" id="aSeq"></p></div>
+    </div>
+    <div class="zones" id="zones"></div>
+  </section>
+
+  <!-- ④ 최근 10회 -->
+  <section class="card">
+    <div class="sec-h"><h2>최근 한 달 당첨번호</h2><small>눌러서 회차 보기</small></div>
+    <ul class="hist" id="hist"></ul>
+  </section>
+
+  <!-- ⑤ 출현 통계 -->
+  <section class="card">
+    <div class="sec-h"><h2>번호 출현 통계</h2><small id="statMeta"></small></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-k="hot" aria-selected="true">최다 출현</button>
+      <button class="tab" role="tab" data-k="cold" aria-selected="false">최소 출현</button>
+      <button class="tab" role="tab" data-k="zero" aria-selected="false">미출현 번호</button>
+    </div>
+    <ol class="rank6" id="rank6"></ol>
+    <div class="heat" id="heat" aria-label="1~45번 출현 횟수"></div>
+    <div class="legend">적음 <i></i> 많음 · <span style="color:var(--pink)">□</span> 선택 회차 번호</div>
+  </section>
+
+  <!-- ⑥ 다음 추첨 -->
+  <section class="card next">
+    <div>
+      <p class="t" id="nextTitle"></p>
+      <p class="cd num-t" id="countdown"></p>
+    </div>
+    <a class="cta" href="/lotto">번호 고르러 가기 →</a>
+  </section>
+</template>
+
+<script src="data.js"></script>
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const D = window.LOTTO_DATA;
+
+  /* 테마 */
+  const themeSel = $('#themeSel');
+  themeSel.value = document.documentElement.dataset.theme;
+  themeSel.addEventListener('change', () => {
+    document.documentElement.dataset.theme = themeSel.value;
+    try { localStorage.setItem('lotto645.theme', themeSel.value); } catch (e) {}
+  });
+
+  if (!D || !D.draws || !D.draws.length) {
+    $('#app').innerHTML = '<p class="empty">데이터가 아직 없습니다. <code>python lotto_result/build.py</code> 를 실행해 주세요.</p>';
+    return;
+  }
+  $('#updated').textContent = D.updated;
+  $('#app').replaceChildren($('#tpl').content.cloneNode(true));
+
+  /* 포맷 */
+  const comma = n => n.toLocaleString('ko-KR');
+  const won = n => comma(n) + '원';
+  const eok = n => {                         // 2,357,299,875 → 23억 5,730만원
+    if (n < 1e8) return n >= 1e4 ? comma(Math.round(n / 1e4)) + '만원' : won(n);
+    const e = Math.floor(n / 1e8), m = Math.round((n % 1e8) / 1e4);
+    return e + '억' + (m ? ' ' + comma(m) + '만' : '') + '원';
+  };
+  const dateK = s => { const d = new Date(s + 'T00:00:00+09:00');
+    return `${s.replace(/-/g, '.')} (${'일월화수목금토'[d.getDay()]})`; };
+  const zone = n => n <= 10 ? 1 : n <= 20 ? 2 : n <= 30 ? 3 : n <= 40 ? 4 : 5;
+  const ball = (n, cls = '') => `<span class="ball b${zone(n)} ${cls}">${n}</span>`;
+
+  const draws = D.draws;                     // 최신순
+  let idx = 0;
+
+  const COND = ['6개 번호 일치', '5개 + 보너스', '5개 번호 일치', '4개 번호 일치', '3개 번호 일치'];
+
+  function render(i, animate = true) {
+    idx = i;
+    const d = draws[i];
+    $('#roundTitle').innerHTML = `제 <b>${d.round}</b>회` + (i === 0 ? '<span class="badge">최신</span>' : '');
+    $('#roundDate').textContent = dateK(d.date) + ' 추첨';
+    $('#prevBtn').disabled = i >= draws.length - 1;
+    $('#nextBtn').disabled = i === 0;
+
+    $('#balls').innerHTML = d.nums.map((n, k) =>
+      ball(n, animate ? 'pop' : '').replace('class="', `style="animation-delay:${k * 90}ms" class="`)).join('')
+      + '<span class="plus">+</span>'
+      + ball(d.bonus, animate ? 'pop' : '').replace('class="', 'style="animation-delay:600ms" class="');
+
+    const [c1, a1] = d.ranks[0];
+    $('#firstAmt').textContent = c1 ? eok(a1) : '당첨자 없음';
+    $('#firstAmtFull').textContent = c1 ? won(a1) : '이월';
+    $('#firstCnt').textContent = comma(c1) + '명';
+    const [au, ma, se] = d.firstType;
+    $('#firstType').textContent = c1 ? `자동 ${au} · 수동 ${ma} · 반자동 ${se}` : '';
+
+    $('#rankBody').innerHTML = d.ranks.map(([c, a, t], k) => `
+      <tr class="rk${k + 1}"><td>${k + 1}등<span class="cond">${COND[k]}</span></td>
+      <td class="num-t">${comma(c)}명</td><td class="num-t">${k < 3 ? eok(a) : won(a)}</td>
+      <td class="num-t">${eok(t)}</td></tr>`).join('');
+    $('#sales').textContent = d.sales ? won(d.sales) : '-';
+
+    /* 분석 */
+    const ns = d.nums;
+    const odd = ns.filter(n => n % 2).length, low = ns.filter(n => n <= 22).length;
+    let seq = 0; for (let k = 1; k < 6; k++) if (ns[k] - ns[k - 1] === 1) seq++;
+    $('#aSum').textContent = ns.reduce((a, b) => a + b, 0);
+    $('#aOdd').textContent = `${odd} : ${6 - odd}`;
+    $('#aLow').textContent = `${low} : ${6 - low}`;
+    $('#aSeq').textContent = seq ? seq + '쌍' : '없음';
+    const zc = [0, 0, 0, 0, 0]; ns.forEach(n => zc[zone(n) - 1]++);
+    const zcol = ['#fbc400', '#69c8f2', '#ff7272', '#aaaaaa', '#b0d840'];
+    const zlab = ['1~10', '11~20', '21~30', '31~40', '41~45'];
+    $('#zones').innerHTML = zc.map((c, k) => `<div class="zone"><div class="bar">
+      <i style="height:${c / 6 * 100}%;background:${zcol[k]}"></i><span>${c}</span></div>${zlab[k]}</div>`).join('');
+
+    /* 최근 회차 하이라이트 */
+    document.querySelectorAll('#hist li').forEach(li => li.classList.toggle('cur', +li.dataset.i === i));
+    renderHeat();
+  }
+
+  /* 최근 10회 */
+  $('#hist').innerHTML = draws.map((d, i) => `
+    <li tabindex="0" data-i="${i}"><span class="hr num-t">${d.round}회</span>
+      <span class="hb">${d.nums.map(n => ball(n, 'sm')).join('')}<span class="plus" style="font-size:12px">+</span>${ball(d.bonus, 'sm')}</span>
+      <span class="hd num-t">${d.date.slice(5).replace('-', '.')}</span></li>`).join('');
+  $('#hist').addEventListener('click', e => { const li = e.target.closest('li'); if (li) { render(+li.dataset.i); scrollTo({ top: 0, behavior: 'smooth' }); } });
+  $('#hist').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.i) render(+e.target.dataset.i); });
+
+  /* 통계 */
+  const S = D.stats, freq = S.freq;
+  $('#statMeta').textContent = `최근 한 달 · ${draws[draws.length - 1].round}~${draws[0].round}회`;
+  const nums45 = Array.from({ length: 45 }, (_, k) => k + 1);
+  let tabKey = 'hot';
+  function renderRank() {
+    if (tabKey === 'zero') {                 // 한 달간 한 번도 안 나온 번호 전체
+      const zero = nums45.filter(n => !freq[n - 1]);
+      $('#rank6').style.gridTemplateColumns = 'repeat(9,1fr)';
+      $('#rank6').innerHTML = zero.length
+        ? zero.map(n => `<li>${ball(n, 'sm')}</li>`).join('')
+        : '<li style="grid-column:1/-1">모든 번호가 한 번 이상 나왔어요</li>';
+      return;
+    }
+    $('#rank6').style.gridTemplateColumns = '';
+    const sorted = [...nums45].sort(tabKey === 'hot'
+      ? (a, b) => freq[b - 1] - freq[a - 1] || a - b
+      : (a, b) => (freq[a - 1] || 99) - (freq[b - 1] || 99) || a - b).slice(0, 6);  // 최소: 1회 이상 중
+    $('#rank6').innerHTML = sorted.map(n => `<li>${ball(n, 'sm')}<span class="num-t">${freq[n - 1]}회</span></li>`).join('');
+  }
+  function renderHeat() {
+    const mn = Math.min(...freq), mx = Math.max(...freq), cur = new Set(draws[idx].nums);
+    $('#heat').innerHTML = nums45.map(n => {
+      const p = mx === mn ? 50 : Math.round(8 + (freq[n - 1] - mn) / (mx - mn) * 82);
+      const dark = p > 55;
+      return `<div class="${cur.has(n) ? 'hit' : ''}" title="${n}번 · ${freq[n - 1]}회 출현"
+        style="background:color-mix(in srgb,var(--teal) ${p}%,var(--bg));color:${dark ? '#fff' : 'var(--text)'}">
+        ${n}<small class="num-t">${freq[n - 1]}</small></div>`;
+    }).join('');
+  }
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    tabKey = t.dataset.k;
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+    renderRank();
+  }));
+
+  /* 회차 이동 */
+  $('#prevBtn').addEventListener('click', () => render(Math.min(idx + 1, draws.length - 1)));
+  $('#nextBtn').addEventListener('click', () => render(Math.max(idx - 1, 0)));
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('select,input')) return;
+    if (e.key === 'ArrowLeft' && !$('#prevBtn').disabled) $('#prevBtn').click();
+    if (e.key === 'ArrowRight' && !$('#nextBtn').disabled) $('#nextBtn').click();
+  });
+
+  /* 다음 추첨 카운트다운 (매주 토 20:35 KST) */
+  const latest = draws[0];
+  const nextDraw = new Date(latest.date + 'T20:35:00+09:00'); nextDraw.setDate(nextDraw.getDate() + 7);
+  $('#nextTitle').textContent = `제 ${latest.round + 1}회 추첨까지 · ${dateK(nextDraw.toISOString().slice(0, 10))} 20:35`;
+  function tick() {
+    let s = Math.floor((nextDraw - Date.now()) / 1000);
+    if (s <= 0) { $('#countdown').textContent = '추첨 완료 · 결과 집계 중'; return; }
+    const dd = Math.floor(s / 86400); s %= 86400;
+    const hh = String(Math.floor(s / 3600)).padStart(2, '0'), mm = String(Math.floor(s % 3600 / 60)).padStart(2, '0'),
+          ss = String(s % 60).padStart(2, '0');
+    $('#countdown').textContent = (dd ? `${dd}일 ` : '') + `${hh}:${mm}:${ss}`;
+  }
+  tick(); setInterval(tick, 1000);
+
+  renderRank();
+  render(0);
+})();
+</script>
+</body>
+</html>
